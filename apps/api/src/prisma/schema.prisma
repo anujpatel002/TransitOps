@@ -42,11 +42,21 @@ enum RequestStatus {
   REJECTED
 }
 
+model Organization {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  users     User[]
+  vehicles  Vehicle[]
+  drivers   Driver[]
+}
+
 model RegistrationRequest {
   id           String        @id @default(uuid())
   name         String
   email        String        @unique
   password     String
+  orgName      String        @default("")
   status       RequestStatus @default(PENDING)
   createdAt    DateTime      @default(now())
   reviewedAt   DateTime?
@@ -54,29 +64,35 @@ model RegistrationRequest {
 }
 
 model User {
-  id                  String    @id @default(uuid())
-  name                String    @default("")
-  email               String    @unique
+  id                  String        @id @default(uuid())
+  name                String        @default("")
+  email               String        @unique
   password            String
   role                Role
-  mustChangePassword  Boolean   @default(false)
-  failedLoginAttempts Int       @default(0)
+  orgId               String?
+  org                 Organization? @relation(fields: [orgId], references: [id])
+  mustChangePassword  Boolean       @default(false)
+  failedLoginAttempts Int           @default(0)
   lockedAt            DateTime?
 }
 
 model Vehicle {
-  id              String        @id @default(uuid())
-  regNumber       String        @unique
+  id              String         @id @default(uuid())
+  regNumber       String
   name            String
   type            String
   maxLoadKg       Float
-  odometer        Float         @default(0)
+  odometer        Float          @default(0)
   acquisitionCost Float
-  status          VehicleStatus @default(AVAILABLE)
+  status          VehicleStatus  @default(AVAILABLE)
+  orgId           String
+  org             Organization   @relation(fields: [orgId], references: [id])
   trips           Trip[]
   maintenance     MaintenanceLog[]
   fuelLogs        FuelLog[]
   expenses        Expense[]
+
+  @@unique([regNumber, orgId])
 }
 
 model Driver {
@@ -88,6 +104,8 @@ model Driver {
   contact         String
   safetyScore     Float        @default(100)
   status          DriverStatus @default(AVAILABLE)
+  orgId           String
+  org             Organization @relation(fields: [orgId], references: [id])
   trips           Trip[]
 }
 

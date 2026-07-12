@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-interface AuthUser { id: string; email: string; name: string; role: string; mustChangePassword: boolean; }
+interface AuthUser { id: string; email: string; name: string; role: string; orgId: string | null; mustChangePassword: boolean; }
 interface AuthCtx {
   token: string | null;
   user: AuthUser | null;

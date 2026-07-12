@@ -302,7 +302,7 @@ export default function Settings() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  {['Name', 'Email', 'Submitted', 'Status', ''].map(h => (
+                  {['Name', 'Email', 'Company', 'Submitted', 'Status', ''].map(h => (
                     <th key={h} className="text-left text-text-muted text-xs px-5 py-3 font-medium">{h}</th>
                   ))}
                 </tr>
@@ -315,6 +315,7 @@ export default function Settings() {
                   <tr key={r.id} className="border-b border-border/50 hover:bg-white/[0.02]">
                     <td className="px-5 py-3 text-text-primary font-medium">{r.name}</td>
                     <td className="px-5 py-3 text-text-muted">{r.email}</td>
+                    <td className="px-5 py-3 text-text-muted">{r.orgName || '—'}</td>
                     <td className="px-5 py-3 text-text-muted text-xs">{new Date(r.createdAt).toLocaleDateString()}</td>
                     <td className="px-5 py-3">
                       {r.status === 'PENDING'  && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400 font-medium">Pending</span>}

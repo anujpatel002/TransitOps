@@ -1,54 +1,50 @@
 import { Router } from 'express';
-import { verifyToken } from '../middleware/auth';
+import { verifyToken, AuthRequest } from '../middleware/auth';
 import { requireRole } from '../middleware/requireRole';
 import { TripError, createTrip, listTrips, dispatchTrip, completeTrip, cancelTrip } from '../services/tripService';
 
 const router = Router();
 router.use(verifyToken);
 
-// GET /trips — Dispatcher (write), Fleet Manager, Safety Officer (read)
-router.get('/', requireRole('FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER'), async (_req, res, next) => {
+const orgId = (req: AuthRequest) => req.user!.orgId!;
+
+router.get('/', requireRole('FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER'), async (req: AuthRequest, res, next) => {
   try {
-    res.json(await listTrips());
+    res.json(await listTrips(orgId(req)));
   } catch (err) { next(err); }
 });
 
-// POST /trips — Dispatcher + Fleet Manager
-router.post('/', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req, res, next) => {
+router.post('/', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req: AuthRequest, res, next) => {
   try {
-    const trip = await createTrip(req.body);
-    res.status(201).json(trip);
+    res.status(201).json(await createTrip(req.body, orgId(req)));
   } catch (err) {
     if (err instanceof TripError) { res.status(err.statusCode).json({ message: err.message }); return; }
     next(err);
   }
 });
 
-// POST /trips/:id/dispatch
-router.post('/:id/dispatch', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req, res, next) => {
+router.post('/:id/dispatch', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req: AuthRequest, res, next) => {
   try {
-    res.json(await dispatchTrip(req.params.id));
+    res.json(await dispatchTrip(req.params.id, orgId(req)));
   } catch (err) {
     if (err instanceof TripError) { res.status(err.statusCode).json({ message: err.message }); return; }
     next(err);
   }
 });
 
-// POST /trips/:id/complete
-router.post('/:id/complete', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req, res, next) => {
+router.post('/:id/complete', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req: AuthRequest, res, next) => {
   try {
     const { finalOdometer, fuelConsumed } = req.body;
-    res.json(await completeTrip(req.params.id, finalOdometer, fuelConsumed));
+    res.json(await completeTrip(req.params.id, finalOdometer, fuelConsumed, orgId(req)));
   } catch (err) {
     if (err instanceof TripError) { res.status(err.statusCode).json({ message: err.message }); return; }
     next(err);
   }
 });
 
-// POST /trips/:id/cancel
-router.post('/:id/cancel', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req, res, next) => {
+router.post('/:id/cancel', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req: AuthRequest, res, next) => {
   try {
-    res.json(await cancelTrip(req.params.id));
+    res.json(await cancelTrip(req.params.id, orgId(req)));
   } catch (err) {
     if (err instanceof TripError) { res.status(err.statusCode).json({ message: err.message }); return; }
     next(err);

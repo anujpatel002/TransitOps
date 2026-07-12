@@ -11,15 +11,18 @@ const ROLE_HINTS = [
 ];
 
 const DEMO_USERS = [
-  { label: 'Super Admin',                 email: 'admin@transitops.io',    password: 'admin123',    role: 'ADMIN'             },
-  { label: 'Rohan K — Fleet Manager',     email: 'rohan.k@transitops.io',  password: 'fleet123',    role: 'FLEET_MANAGER'     },
-  { label: 'Priya M — Fleet Manager',     email: 'priya.m@transitops.io',  password: 'fleet123',    role: 'FLEET_MANAGER'     },
-  { label: 'Anuj D — Dispatcher',         email: 'anuj.d@transitops.io',   password: 'dispatch123', role: 'DISPATCHER'        },
-  { label: 'Sara T — Dispatcher',         email: 'sara.t@transitops.io',   password: 'dispatch123', role: 'DISPATCHER'        },
-  { label: 'Vivek R — Safety Officer',    email: 'vivek.r@transitops.io',  password: 'safety123',   role: 'SAFETY_OFFICER'    },
-  { label: 'Neha S — Safety Officer',     email: 'neha.s@transitops.io',   password: 'safety123',   role: 'SAFETY_OFFICER'    },
-  { label: 'Ahmed F — Financial Analyst', email: 'ahmed.f@transitops.io',  password: 'finance123',  role: 'FINANCIAL_ANALYST' },
-  { label: 'Lina P — Financial Analyst',  email: 'lina.p@transitops.io',   password: 'finance123',  role: 'FINANCIAL_ANALYST' },
+  { label: 'Super Admin',                        email: 'admin@transitops.io',    password: 'admin123',    role: 'ADMIN',             org: ''                          },
+  // Org 1 — Mumbai Freight Co
+  { label: 'Rohan K — Fleet Manager (Mumbai)',   email: 'rohan.k@transitops.io',  password: 'fleet123',    role: 'FLEET_MANAGER',     org: 'Mumbai Freight Co'         },
+  { label: 'Priya M — Fleet Manager (Mumbai)',   email: 'priya.m@transitops.io',  password: 'fleet123',    role: 'FLEET_MANAGER',     org: 'Mumbai Freight Co'         },
+  { label: 'Tirth — Fleet Manager (Mumbai)',     email: 'tirth@transitops.io',    password: 'fleet123',    role: 'FLEET_MANAGER',     org: 'Mumbai Freight Co'         },
+  { label: 'Anuj D — Dispatcher (Mumbai)',       email: 'anuj.d@transitops.io',   password: 'dispatch123', role: 'DISPATCHER',        org: 'Mumbai Freight Co'         },
+  { label: 'Vivek R — Safety Officer (Mumbai)',  email: 'vivek.r@transitops.io',  password: 'safety123',   role: 'SAFETY_OFFICER',    org: 'Mumbai Freight Co'         },
+  { label: 'Ahmed F — Financial Analyst (Mumbai)',email: 'ahmed.f@transitops.io', password: 'finance123',  role: 'FINANCIAL_ANALYST', org: 'Mumbai Freight Co'         },
+  // Org 2 — Delhi Express Logistics
+  { label: 'Sara T — Fleet Manager (Delhi)',     email: 'sara.t@transitops.io',   password: 'fleet123',    role: 'FLEET_MANAGER',     org: 'Delhi Express Logistics'   },
+  { label: 'Neha S — Safety Officer (Delhi)',    email: 'neha.s@transitops.io',   password: 'safety123',   role: 'SAFETY_OFFICER',    org: 'Delhi Express Logistics'   },
+  { label: 'Lina P — Financial Analyst (Delhi)', email: 'lina.p@transitops.io',   password: 'finance123',  role: 'FINANCIAL_ANALYST', org: 'Delhi Express Logistics'   },
 ];
 
 const MAX_ATTEMPTS = 5;
@@ -135,9 +138,9 @@ export default function Login() {
                 className={inputCls + ' border-accent/30 focus:border-accent'}
               >
                 <option value="" disabled>Select a demo user…</option>
-                {['ADMIN', 'FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER', 'FINANCIAL_ANALYST'].map(role => (
-                  <optgroup key={role} label={role.replace(/_/g, ' ')}>
-                    {DEMO_USERS.filter(u => u.role === role).map(u => (
+                {['', 'Mumbai Freight Co', 'Delhi Express Logistics'].map(org => (
+                  <optgroup key={org || 'admin'} label={org || 'Platform Admin'}>
+                    {DEMO_USERS.filter(u => u.org === org).map(u => (
                       <option key={u.email} value={u.email}>{u.label}</option>
                     ))}
                   </optgroup>

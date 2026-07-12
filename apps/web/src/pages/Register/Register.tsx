@@ -5,7 +5,7 @@ import http from '../../lib/http';
 const inp = 'w-full bg-panel border border-border rounded-lg px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all disabled:opacity-40';
 
 export default function Register() {
-  const [form, setForm]       = useState({ name: '', email: '', password: '', confirm: '' });
+  const [form, setForm]       = useState({ name: '', email: '', orgName: '', password: '', confirm: '' });
   const [error, setError]     = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,6 +23,7 @@ export default function Register() {
       await http.post('/registration-requests', {
         name: form.name,
         email: form.email,
+        orgName: form.orgName,
         password: form.password,
       });
       setSuccess(true);
@@ -50,14 +51,14 @@ export default function Register() {
             Request Access<br />to TransitOps
           </h2>
           <p className="text-gray-500 text-sm mb-8 leading-relaxed">
-            Submit your details to request a Fleet Manager account. An administrator will review and approve your request.
+            Submit your company details to request a Fleet Manager account. An administrator will review and approve your request.
           </p>
 
           <div className="space-y-3">
             {[
-              { step: '1', label: 'Fill in your details', desc: 'Name, email and a password' },
+              { step: '1', label: 'Fill in your details', desc: 'Name, company, email & password' },
               { step: '2', label: 'Admin reviews request', desc: 'Usually within 24 hours' },
-              { step: '3', label: 'Account activated', desc: 'Log in as Fleet Manager' },
+              { step: '3', label: 'Your org is created', desc: 'Log in as Fleet Manager' },
             ].map(({ step, label, desc }) => (
               <div key={step} className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-amber-400/20 flex items-center justify-center text-amber-600 font-bold text-xs shrink-0 mt-0.5">{step}</div>
@@ -90,10 +91,7 @@ export default function Register() {
               <p className="text-text-muted text-sm mb-6 leading-relaxed">
                 Your registration request has been sent to the administrator for review. You'll be able to log in once it's approved.
               </p>
-              <Link
-                to="/login"
-                className="inline-block w-full py-2.5 bg-accent hover:bg-accent-hover text-white rounded-lg text-sm font-semibold transition-colors text-center"
-              >
+              <Link to="/login" className="inline-block w-full py-2.5 bg-accent hover:bg-accent-hover text-white rounded-lg text-sm font-semibold transition-colors text-center">
                 Back to Login
               </Link>
             </div>
@@ -118,6 +116,10 @@ export default function Register() {
                   <input type="text" placeholder="e.g. Rohan Kumar" value={form.name} onChange={set('name')} className={inp} required disabled={loading} />
                 </div>
                 <div>
+                  <label className="block text-xs font-medium text-text-muted uppercase tracking-wider mb-1.5">Company / Organization</label>
+                  <input type="text" placeholder="e.g. Acme Logistics" value={form.orgName} onChange={set('orgName')} className={inp} required disabled={loading} />
+                </div>
+                <div>
                   <label className="block text-xs font-medium text-text-muted uppercase tracking-wider mb-1.5">Work Email</label>
                   <input type="email" placeholder="you@company.com" value={form.email} onChange={set('email')} className={inp} required disabled={loading} />
                 </div>
@@ -131,12 +133,10 @@ export default function Register() {
                 </div>
 
                 <p className="text-text-muted text-xs leading-relaxed pt-1">
-                  By submitting, you're requesting a <span className="text-text-primary font-medium">Fleet Manager</span> account. An admin will review your request before access is granted.
+                  By submitting, you're requesting a <span className="text-text-primary font-medium">Fleet Manager</span> account for your organization. An admin will review before access is granted.
                 </p>
 
-                <button
-                  type="submit"
-                  disabled={loading}
+                <button type="submit" disabled={loading}
                   className="w-full bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg py-2.5 font-semibold text-sm transition-all shadow-lg shadow-amber-900/20"
                 >
                   {loading ? 'Submitting…' : 'Request Access →'}

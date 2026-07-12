@@ -3,16 +3,18 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { verifyToken } from '../middleware/auth';
 import { requireRole } from '../middleware/requireRole';
+import { sendTempPassword } from '../services/mailer';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 router.use(verifyToken, requireRole('FLEET_MANAGER', 'ADMIN'));
 
-// List all users
-router.get('/', async (_req, res, next) => {
+// List all users in same org
+router.get('/', async (req: any, res, next) => {
   try {
     const users = await prisma.user.findMany({
+      where: { orgId: req.user.orgId },
       select: { id: true, name: true, email: true, role: true, mustChangePassword: true, lockedAt: true },
       orderBy: { email: 'asc' },
     });
@@ -20,8 +22,8 @@ router.get('/', async (_req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Create user
-router.post('/', async (req, res, next) => {
+// Create user — inherits creator's orgId
+router.post('/', async (req: any, res, next) => {
   try {
     const { name, email, role, password } = req.body;
     if (!name || !email || !role || !password)
@@ -29,9 +31,10 @@ router.post('/', async (req, res, next) => {
 
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, role, password: hashed, mustChangePassword: true },
+      data: { name, email, role, password: hashed, mustChangePassword: true, orgId: (req as any).user.orgId ?? null },
       select: { id: true, name: true, email: true, role: true, mustChangePassword: true },
     });
+    await sendTempPassword(email, name, password).catch(() => {});
     res.status(201).json(user);
   } catch (err: any) {
     if (err.code === 'P2002') return void res.status(409).json({ message: 'Email already exists' });
@@ -39,10 +42,12 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// Update role or unlock
-router.patch('/:id', async (req, res, next) => {
+// Update role or unlock — only within same org
+router.patch('/:id', async (req: any, res, next) => {
   try {
     const { role, unlock } = req.body;
+    const target = await prisma.user.findFirst({ where: { id: req.params.id, orgId: req.user.orgId } });
+    if (!target) return void res.status(404).json({ message: 'User not found' });
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: {
@@ -55,9 +60,11 @@ router.patch('/:id', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Delete user
-router.delete('/:id', async (req, res, next) => {
+// Delete user — only within same org
+router.delete('/:id', async (req: any, res, next) => {
   try {
+    const target = await prisma.user.findFirst({ where: { id: req.params.id, orgId: req.user.orgId } });
+    if (!target) return void res.status(404).json({ message: 'User not found' });
     await prisma.user.delete({ where: { id: req.params.id } });
     res.status(204).send();
   } catch (err) { next(err); }

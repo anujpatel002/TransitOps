@@ -52,7 +52,7 @@ router.post('/login', async (req, res, next) => {
     });
 
     const token = jwt.sign(
-      { id: user.id, role: user.role },
+      { id: user.id, role: user.role, orgId: user.orgId ?? null },
       process.env.JWT_SECRET!,
       { expiresIn: '8h' }
     );
@@ -63,6 +63,7 @@ router.post('/login', async (req, res, next) => {
         email: user.email,
         role: user.role,
         name: user.name,
+        orgId: user.orgId,
         mustChangePassword: user.mustChangePassword,
       },
     });
