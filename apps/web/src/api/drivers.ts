@@ -16,6 +16,8 @@ export const driversApi = {
   available: () => http.get<Driver[]>('/drivers/available'),
   get: (id: string) => http.get<Driver>(`/drivers/${id}`),
   create: (data: Omit<Driver, 'id'>) => http.post<Driver>('/drivers', data),
+  patch: (id: string, data: Partial<Driver>) => http.patch<Driver>(`/drivers/${id}`, data),
   update: (id: string, data: Partial<Driver>) => http.put<Driver>(`/drivers/${id}`, data),
   remove: (id: string) => http.delete(`/drivers/${id}`),
 };
+

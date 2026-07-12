@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { verifyToken } from '../middleware/auth';
 import { requireRole } from '../middleware/requireRole';
 
@@ -7,7 +7,8 @@ const router = Router();
 const prisma = new PrismaClient();
 router.use(verifyToken);
 
-// GET /vehicles/available — vehicles that can be dispatched (Tirth owns full impl)
+// GET /vehicles/available — vehicles that can be dispatched
+// Hard rule: only AVAILABLE vehicles, never RETIRED / IN_SHOP
 router.get('/available', requireRole('FLEET_MANAGER', 'DISPATCHER'), async (_req, res, next) => {
   try {
     const vehicles = await prisma.vehicle.findMany({ where: { status: 'AVAILABLE' } });
@@ -15,9 +16,13 @@ router.get('/available', requireRole('FLEET_MANAGER', 'DISPATCHER'), async (_req
   } catch (err) { next(err); }
 });
 
-router.get('/', requireRole('FLEET_MANAGER', 'DISPATCHER', 'FINANCIAL_ANALYST'), async (_req, res, next) => {
+// GET /vehicles — full list with optional ?type= and ?status= filters
+router.get('/', requireRole('FLEET_MANAGER', 'DISPATCHER', 'FINANCIAL_ANALYST'), async (req, res, next) => {
   try {
-    res.json(await prisma.vehicle.findMany());
+    const where: Prisma.VehicleWhereInput = {};
+    if (req.query.type) where.type = req.query.type as string;
+    if (req.query.status) where.status = req.query.status as any;
+    res.json(await prisma.vehicle.findMany({ where, orderBy: { regNumber: 'asc' } }));
   } catch (err) { next(err); }
 });
 
@@ -36,10 +41,30 @@ router.get('/:id', requireRole('FLEET_MANAGER', 'DISPATCHER', 'FINANCIAL_ANALYST
   } catch (err) { next(err); }
 });
 
+// POST /vehicles — create; enforce regNumber uniqueness with clear error
 router.post('/', requireRole('FLEET_MANAGER'), async (req, res, next) => {
   try {
     res.status(201).json(await prisma.vehicle.create({ data: req.body }));
-  } catch (err) { next(err); }
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      res.status(409).json({ message: 'Registration number already exists' });
+      return;
+    }
+    next(err);
+  }
+});
+
+// PATCH /vehicles/:id — partial update (supports status-only updates for maintenance flow)
+router.patch('/:id', requireRole('FLEET_MANAGER', 'SAFETY_OFFICER'), async (req, res, next) => {
+  try {
+    res.json(await prisma.vehicle.update({ where: { id: req.params.id }, data: req.body }));
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      res.status(409).json({ message: 'Registration number already exists' });
+      return;
+    }
+    next(err);
+  }
 });
 
 router.put('/:id', requireRole('FLEET_MANAGER'), async (req, res, next) => {

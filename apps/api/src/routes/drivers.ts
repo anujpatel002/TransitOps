@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { verifyToken } from '../middleware/auth';
 import { requireRole } from '../middleware/requireRole';
 
@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 router.use(verifyToken);
 
 // GET /drivers/available — AVAILABLE, valid license, not SUSPENDED
+// Hard rule: expired-license or suspended drivers are blocked from trip assignment
 router.get('/available', requireRole('FLEET_MANAGER', 'DISPATCHER'), async (_req, res, next) => {
   try {
     const drivers = await prisma.driver.findMany({
@@ -20,9 +21,10 @@ router.get('/available', requireRole('FLEET_MANAGER', 'DISPATCHER'), async (_req
   } catch (err) { next(err); }
 });
 
-router.get('/', requireRole('FLEET_MANAGER', 'SAFETY_OFFICER'), async (_req, res, next) => {
+// GET /drivers — full list
+router.get('/', requireRole('FLEET_MANAGER', 'SAFETY_OFFICER', 'DISPATCHER'), async (_req, res, next) => {
   try {
-    res.json(await prisma.driver.findMany());
+    res.json(await prisma.driver.findMany({ orderBy: { name: 'asc' } }));
   } catch (err) { next(err); }
 });
 
@@ -34,9 +36,23 @@ router.get('/:id', requireRole('FLEET_MANAGER', 'SAFETY_OFFICER'), async (req, r
   } catch (err) { next(err); }
 });
 
+// POST /drivers — create
 router.post('/', requireRole('FLEET_MANAGER', 'SAFETY_OFFICER'), async (req, res, next) => {
   try {
     res.status(201).json(await prisma.driver.create({ data: req.body }));
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      res.status(409).json({ message: 'Driver with this information already exists' });
+      return;
+    }
+    next(err);
+  }
+});
+
+// PATCH /drivers/:id — partial update (status, safetyScore, etc.)
+router.patch('/:id', requireRole('FLEET_MANAGER', 'SAFETY_OFFICER'), async (req, res, next) => {
+  try {
+    res.json(await prisma.driver.update({ where: { id: req.params.id }, data: req.body }));
   } catch (err) { next(err); }
 });
 
