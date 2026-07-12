@@ -13,6 +13,7 @@ export interface Vehicle {
 
 export const vehiclesApi = {
   list: () => http.get<Vehicle[]>('/vehicles'),
+  available: () => http.get<Vehicle[]>('/vehicles/available'),
   get: (id: string) => http.get<Vehicle>(`/vehicles/${id}`),
   create: (data: Omit<Vehicle, 'id'>) => http.post<Vehicle>('/vehicles', data),
   update: (id: string, data: Partial<Vehicle>) => http.put<Vehicle>(`/vehicles/${id}`, data),

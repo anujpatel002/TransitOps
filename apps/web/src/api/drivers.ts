@@ -13,6 +13,7 @@ export interface Driver {
 
 export const driversApi = {
   list: () => http.get<Driver[]>('/drivers'),
+  available: () => http.get<Driver[]>('/drivers/available'),
   get: (id: string) => http.get<Driver>(`/drivers/${id}`),
   create: (data: Omit<Driver, 'id'>) => http.post<Driver>('/drivers', data),
   update: (id: string, data: Partial<Driver>) => http.put<Driver>(`/drivers/${id}`, data),

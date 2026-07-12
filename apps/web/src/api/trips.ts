@@ -12,12 +12,15 @@ export interface Trip {
   fuelConsumed?: number;
   status: 'DRAFT' | 'DISPATCHED' | 'COMPLETED' | 'CANCELLED';
   createdAt: string;
+  vehicle?: { id: string; name: string; regNumber: string };
+  driver?: { id: string; name: string };
 }
 
 export const tripsApi = {
   list: () => http.get<Trip[]>('/trips'),
-  get: (id: string) => http.get<Trip>(`/trips/${id}`),
-  create: (data: Omit<Trip, 'id' | 'createdAt'>) => http.post<Trip>('/trips', data),
-  update: (id: string, data: Partial<Trip>) => http.put<Trip>(`/trips/${id}`, data),
-  remove: (id: string) => http.delete(`/trips/${id}`),
+  create: (data: Omit<Trip, 'id' | 'createdAt' | 'vehicle' | 'driver'>) => http.post<Trip>('/trips', data),
+  dispatch: (id: string) => http.post<Trip>(`/trips/${id}/dispatch`),
+  complete: (id: string, finalOdometer: number, fuelConsumed: number) =>
+    http.post<Trip>(`/trips/${id}/complete`, { finalOdometer, fuelConsumed }),
+  cancel: (id: string) => http.post<Trip>(`/trips/${id}/cancel`),
 };
