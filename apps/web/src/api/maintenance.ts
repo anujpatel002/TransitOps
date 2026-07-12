@@ -8,11 +8,12 @@ export interface MaintenanceLog {
   active: boolean;
   createdAt: string;
   closedAt?: string;
+  vehicle?: { regNumber: string; name: string };
 }
 
 export const maintenanceApi = {
   list: () => http.get<MaintenanceLog[]>('/maintenance'),
-  get: (id: string) => http.get<MaintenanceLog>(`/maintenance/${id}`),
-  create: (data: Omit<MaintenanceLog, 'id' | 'createdAt'>) => http.post<MaintenanceLog>('/maintenance', data),
-  update: (id: string, data: Partial<MaintenanceLog>) => http.put<MaintenanceLog>(`/maintenance/${id}`, data),
+  create: (data: { vehicleId: string; desc: string; cost: number }) =>
+    http.post<MaintenanceLog>('/maintenance', data),
+  close: (id: string) => http.post<MaintenanceLog>(`/maintenance/${id}/close`),
 };

@@ -23,9 +23,16 @@ router.get('/', requireRole('FLEET_MANAGER', 'DISPATCHER', 'FINANCIAL_ANALYST'),
 
 router.get('/:id', requireRole('FLEET_MANAGER', 'DISPATCHER', 'FINANCIAL_ANALYST'), async (req, res, next) => {
   try {
-    const v = await prisma.vehicle.findUnique({ where: { id: req.params.id } });
+    const id = req.params.id;
+    const [v, fuel, maint] = await Promise.all([
+      prisma.vehicle.findUnique({ where: { id } }),
+      prisma.fuelLog.aggregate({ where: { vehicleId: id }, _sum: { cost: true } }),
+      prisma.maintenanceLog.aggregate({ where: { vehicleId: id }, _sum: { cost: true } }),
+    ]);
     if (!v) { res.status(404).json({ message: 'Not found' }); return; }
-    res.json(v);
+    const fuelCost = fuel._sum.cost ?? 0;
+    const maintenanceCost = maint._sum.cost ?? 0;
+    res.json({ ...v, fuelCost, maintenanceCost, totalOperationalCost: fuelCost + maintenanceCost });
   } catch (err) { next(err); }
 });
 
