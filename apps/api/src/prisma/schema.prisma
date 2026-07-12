@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum Role {
+  ADMIN
   FLEET_MANAGER
   DISPATCHER
   SAFETY_OFFICER
@@ -35,13 +36,32 @@ enum TripStatus {
   CANCELLED
 }
 
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model RegistrationRequest {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String
+  status       RequestStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  reviewedAt   DateTime?
+  rejectReason String?
+}
+
 model User {
-  id                 String    @id @default(uuid())
-  email              String    @unique
-  password           String
-  role               Role
-  failedLoginAttempts Int      @default(0)
-  lockedAt           DateTime?
+  id                  String    @id @default(uuid())
+  name                String    @default("")
+  email               String    @unique
+  password            String
+  role                Role
+  mustChangePassword  Boolean   @default(false)
+  failedLoginAttempts Int       @default(0)
+  lockedAt            DateTime?
 }
 
 model Vehicle {

@@ -14,10 +14,6 @@ export async function getFuelEfficiency() {
         select: { plannedDist: true, fuelConsumed: true },
       },
     },
-    select: {
-      id: true, regNumber: true, name: true,
-      trips: true,
-    },
   });
 
   return vehicles.map(v => {
@@ -45,10 +41,6 @@ export async function getCost() {
       fuelLogs:    { select: { cost: true } },
       maintenance: { select: { cost: true } },
     },
-    select: {
-      id: true, regNumber: true, name: true,
-      fuelLogs: true, maintenance: true,
-    },
   });
 
   return vehicles.map(v => {
@@ -68,11 +60,6 @@ export async function getRoi() {
         where: { status: 'COMPLETED' },
         select: { plannedDist: true },
       },
-    },
-    select: {
-      id: true, regNumber: true, name: true,
-      acquisitionCost: true,
-      fuelLogs: true, maintenance: true, trips: true,
     },
   });
 

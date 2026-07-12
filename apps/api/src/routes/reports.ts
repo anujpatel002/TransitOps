@@ -1,11 +1,22 @@
 import { Router } from 'express';
 import { verifyToken } from '../middleware/auth';
-import { requireAccess } from '../middleware/requireRole';
+import { requireRole } from '../middleware/requireRole';
 import { getFuelEfficiency, getUtilization, getCost, getRoi, getSummary, getMonthlyRevenue } from '../services/reportService';
 
 const router = Router();
 router.use(verifyToken);
-router.use(requireAccess('analytics'));
+
+// summary + monthly-revenue are used by dashboard — open to all authenticated roles
+router.get('/summary', async (_req, res, next) => {
+  try { res.json(await getSummary()); } catch (e) { next(e); }
+});
+
+router.get('/monthly-revenue', async (_req, res, next) => {
+  try { res.json(await getMonthlyRevenue()); } catch (e) { next(e); }
+});
+
+// Analytics-only routes (FLEET_MANAGER + FINANCIAL_ANALYST)
+router.use(requireRole('FLEET_MANAGER', 'FINANCIAL_ANALYST'));
 
 router.get('/fuel-efficiency', async (_req, res, next) => {
   try { res.json(await getFuelEfficiency()); } catch (e) { next(e); }
@@ -23,13 +34,7 @@ router.get('/roi', async (_req, res, next) => {
   try { res.json(await getRoi()); } catch (e) { next(e); }
 });
 
-router.get('/monthly-revenue', async (_req, res, next) => {
-  try { res.json(await getMonthlyRevenue()); } catch (e) { next(e); }
-});
 
-router.get('/summary', async (_req, res, next) => {
-  try { res.json(await getSummary()); } catch (e) { next(e); }
-});
 
 router.get('/export.csv', async (_req, res, next) => {
   try {

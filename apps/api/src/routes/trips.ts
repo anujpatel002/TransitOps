@@ -13,8 +13,8 @@ router.get('/', requireRole('FLEET_MANAGER', 'DISPATCHER', 'SAFETY_OFFICER'), as
   } catch (err) { next(err); }
 });
 
-// POST /trips — Dispatcher only
-router.post('/', requireRole('DISPATCHER'), async (req, res, next) => {
+// POST /trips — Dispatcher + Fleet Manager
+router.post('/', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req, res, next) => {
   try {
     const trip = await createTrip(req.body);
     res.status(201).json(trip);
@@ -25,7 +25,7 @@ router.post('/', requireRole('DISPATCHER'), async (req, res, next) => {
 });
 
 // POST /trips/:id/dispatch
-router.post('/:id/dispatch', requireRole('DISPATCHER'), async (req, res, next) => {
+router.post('/:id/dispatch', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req, res, next) => {
   try {
     res.json(await dispatchTrip(req.params.id));
   } catch (err) {
@@ -35,7 +35,7 @@ router.post('/:id/dispatch', requireRole('DISPATCHER'), async (req, res, next) =
 });
 
 // POST /trips/:id/complete
-router.post('/:id/complete', requireRole('DISPATCHER'), async (req, res, next) => {
+router.post('/:id/complete', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req, res, next) => {
   try {
     const { finalOdometer, fuelConsumed } = req.body;
     res.json(await completeTrip(req.params.id, finalOdometer, fuelConsumed));
@@ -46,7 +46,7 @@ router.post('/:id/complete', requireRole('DISPATCHER'), async (req, res, next) =
 });
 
 // POST /trips/:id/cancel
-router.post('/:id/cancel', requireRole('DISPATCHER'), async (req, res, next) => {
+router.post('/:id/cancel', requireRole('DISPATCHER', 'FLEET_MANAGER'), async (req, res, next) => {
   try {
     res.json(await cancelTrip(req.params.id));
   } catch (err) {

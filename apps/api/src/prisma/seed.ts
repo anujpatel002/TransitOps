@@ -8,14 +8,16 @@ async function main() {
 
   // ── Users (2 per role) ──────────────────────────────────────────────────────
   const users = await Promise.all([
-    prisma.user.upsert({ where: { email: 'rohan.k@transitops.io' },    update: {}, create: { email: 'rohan.k@transitops.io',    password: await hash('fleet123'),     role: 'FLEET_MANAGER'     } }),
-    prisma.user.upsert({ where: { email: 'priya.m@transitops.io' },    update: {}, create: { email: 'priya.m@transitops.io',    password: await hash('fleet123'),     role: 'FLEET_MANAGER'     } }),
-    prisma.user.upsert({ where: { email: 'anuj.d@transitops.io' },     update: {}, create: { email: 'anuj.d@transitops.io',     password: await hash('dispatch123'),  role: 'DISPATCHER'        } }),
-    prisma.user.upsert({ where: { email: 'sara.t@transitops.io' },     update: {}, create: { email: 'sara.t@transitops.io',     password: await hash('dispatch123'),  role: 'DISPATCHER'        } }),
-    prisma.user.upsert({ where: { email: 'vivek.r@transitops.io' },    update: {}, create: { email: 'vivek.r@transitops.io',    password: await hash('safety123'),    role: 'SAFETY_OFFICER'    } }),
-    prisma.user.upsert({ where: { email: 'neha.s@transitops.io' },     update: {}, create: { email: 'neha.s@transitops.io',     password: await hash('safety123'),    role: 'SAFETY_OFFICER'    } }),
-    prisma.user.upsert({ where: { email: 'ahmed.f@transitops.io' },    update: {}, create: { email: 'ahmed.f@transitops.io',    password: await hash('finance123'),   role: 'FINANCIAL_ANALYST' } }),
-    prisma.user.upsert({ where: { email: 'lina.p@transitops.io' },     update: {}, create: { email: 'lina.p@transitops.io',     password: await hash('finance123'),   role: 'FINANCIAL_ANALYST' } }),
+    prisma.user.upsert({ where: { email: 'admin@transitops.io' },       update: { name: 'Super Admin'     }, create: { email: 'admin@transitops.io',       name: 'Super Admin',     password: await hash('admin123'),     role: 'ADMIN'             } }),
+    prisma.user.upsert({ where: { email: 'rohan.k@transitops.io' },    update: { name: 'Rohan K'         }, create: { email: 'rohan.k@transitops.io',    name: 'Rohan K',         password: await hash('fleet123'),     role: 'FLEET_MANAGER'     } }),
+    prisma.user.upsert({ where: { email: 'priya.m@transitops.io' },    update: { name: 'Priya M'         }, create: { email: 'priya.m@transitops.io',    name: 'Priya M',         password: await hash('fleet123'),     role: 'FLEET_MANAGER'     } }),
+    prisma.user.upsert({ where: { email: 'anuj.d@transitops.io' },     update: { name: 'Anuj D'          }, create: { email: 'anuj.d@transitops.io',     name: 'Anuj D',          password: await hash('dispatch123'),  role: 'DISPATCHER'        } }),
+    prisma.user.upsert({ where: { email: 'sara.t@transitops.io' },     update: { name: 'Sara T'          }, create: { email: 'sara.t@transitops.io',     name: 'Sara T',          password: await hash('dispatch123'),  role: 'DISPATCHER'        } }),
+    prisma.user.upsert({ where: { email: 'vivek.r@transitops.io' },    update: { name: 'Vivek R'         }, create: { email: 'vivek.r@transitops.io',    name: 'Vivek R',         password: await hash('safety123'),    role: 'SAFETY_OFFICER'    } }),
+    prisma.user.upsert({ where: { email: 'neha.s@transitops.io' },     update: { name: 'Neha S'          }, create: { email: 'neha.s@transitops.io',     name: 'Neha S',          password: await hash('safety123'),    role: 'SAFETY_OFFICER'    } }),
+    prisma.user.upsert({ where: { email: 'ahmed.f@transitops.io' },    update: { name: 'Ahmed F'         }, create: { email: 'ahmed.f@transitops.io',    name: 'Ahmed F',         password: await hash('finance123'),   role: 'FINANCIAL_ANALYST' } }),
+    prisma.user.upsert({ where: { email: 'lina.p@transitops.io' },     update: { name: 'Lina P'          }, create: { email: 'lina.p@transitops.io',     name: 'Lina P',          password: await hash('finance123'),   role: 'FINANCIAL_ANALYST' } }),
+    prisma.user.upsert({ where: { email: 'tirth@transitops.io' },      update: { name: 'Tirth'           }, create: { email: 'tirth@transitops.io',      name: 'Tirth',           password: await hash('fleet123'),     role: 'FLEET_MANAGER'     } }),
   ]);
   console.log(`✓ ${users.length} users`);
 
@@ -127,6 +129,7 @@ async function main() {
 
   console.log('\n✅ Seed complete');
   console.log('\nDemo credentials:');
+  console.log('  Admin            → admin@transitops.io      / admin123');
   console.log('  Fleet Manager    → rohan.k@transitops.io   / fleet123');
   console.log('  Dispatcher       → anuj.d@transitops.io    / dispatch123');
   console.log('  Safety Officer   → vivek.r@transitops.io   / safety123');

@@ -4,7 +4,7 @@ import { AuthRequest } from './auth';
 // RBAC permission matrix
 // read = GET only, write = all methods
 const PERMISSIONS: Record<string, Record<string, 'write' | 'read' | false>> = {
-  FLEET_MANAGER:     { fleet: 'write', drivers: 'write', trips: false,   fuel: 'write', analytics: 'write' },
+  FLEET_MANAGER:     { fleet: 'write', drivers: 'write', trips: 'write',  fuel: 'write', analytics: 'write' },
   DISPATCHER:        { fleet: 'read',  drivers: false,   trips: 'write',  fuel: false,   analytics: false   },
   SAFETY_OFFICER:    { fleet: false,   drivers: 'write', trips: 'read',   fuel: false,   analytics: false   },
   FINANCIAL_ANALYST: { fleet: 'read',  drivers: false,   trips: false,    fuel: 'write', analytics: 'write' },

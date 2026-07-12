@@ -1,111 +1,100 @@
 import { useEffect, useState } from 'react';
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid } from 'recharts';
 import { reportsApi } from '../../api/reports';
+import ErrorBanner from '../../components/ErrorBanner';
+import { friendlyError } from '../../lib/friendlyError';
 
 interface Summary {
-  avgKmL: number;
-  utilization: number;
-  totalCost: number;
-  avgRoi: number;
+  avgKmL: number; utilization: number; totalCost: number; avgRoi: number;
   cost: { regNumber: string; name: string; totalCost: number }[];
 }
 
 const KPI_DEFS = [
-  { key: 'avgKmL',       label: 'FUEL EFFICIENCY',   color: 'border-blue-500',   fmt: (v: number) => `${v} km/l` },
-  { key: 'utilization',  label: 'FLEET UTILIZATION',  color: 'border-green-500',  fmt: (v: number) => `${v}%`     },
-  { key: 'totalCost',    label: 'OPERATIONAL COST',   color: 'border-amber-500',  fmt: (v: number) => `₹${v.toLocaleString()}` },
-  { key: 'avgRoi',       label: 'VEHICLE ROI',        color: 'border-green-500',  fmt: (v: number) => `${v}%`     },
+  { key: 'avgKmL',      label: 'Fuel Efficiency',   fmt: (v: number) => `${v} km/L`,              accent: 'border-t-blue-500',   color: 'text-blue-400'   },
+  { key: 'utilization', label: 'Fleet Utilization',  fmt: (v: number) => `${v}%`,                  accent: 'border-t-green-500',  color: 'text-green-400'  },
+  { key: 'totalCost',   label: 'Operational Cost',   fmt: (v: number) => `₹${v.toLocaleString()}`, accent: 'border-t-amber-500',  color: 'text-amber-400'  },
+  { key: 'avgRoi',      label: 'Avg Vehicle ROI',    fmt: (v: number) => `${v}%`,                  accent: 'border-t-accent',     color: 'text-accent'     },
 ] as const;
 
-const COST_COLORS = ['#e53e3e', '#ed8936', '#4299e1', '#68d391', '#9f7aea'];
+const CHART_COLORS = ['#e53e3e', '#ed8936', '#4299e1', '#68d391', '#9f7aea'];
+
+const tooltipStyle = { contentStyle: { background: '#141414', border: '1px solid #262626', borderRadius: 8, fontSize: 12 }, labelStyle: { color: '#F5F5F5' } };
 
 export default function Analytics() {
-  const [summary, setSummary]   = useState<Summary | null>(null);
-  const [monthly, setMonthly]   = useState<{ month: string; revenue: number }[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [monthly, setMonthly] = useState<{ month: string; revenue: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState('');
 
   useEffect(() => {
     Promise.all([reportsApi.summary(), reportsApi.monthlyRevenue()])
       .then(([s, m]) => { setSummary(s.data); setMonthly(m.data); })
+      .catch(err => setError(friendlyError(err)))
       .finally(() => setLoading(false));
   }, []);
 
-  const topCostly = summary
-    ? [...summary.cost].sort((a, b) => b.totalCost - a.totalCost).slice(0, 5)
-    : [];
+  const topCostly = summary ? [...summary.cost].sort((a, b) => b.totalCost - a.totalCost).slice(0, 5) : [];
 
   return (
-    <div>
-      {/* Header row */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-text-primary text-xl font-semibold">REPORTS &amp; ANALYTICS</h1>
-        <button
-          onClick={reportsApi.exportCsv}
-          className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded transition-colors"
-        >
-          Export CSV
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-text-primary text-lg font-semibold">Analytics & Reports</h1>
+          <p className="text-text-muted text-xs mt-0.5">Fleet performance metrics and financial overview</p>
+        </div>
+        <button onClick={reportsApi.exportCsv} className="border border-border text-text-muted hover:text-text-primary text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+          ↓ Export CSV
         </button>
       </div>
 
+      <ErrorBanner message={error} />
+
       {/* KPI cards */}
-      <div className="grid grid-cols-4 gap-4 mb-2">
-        {KPI_DEFS.map(({ key, label, color, fmt }) => (
-          <div key={key} className={`bg-panel border border-border border-l-4 ${color} rounded-lg p-4`}>
-            <p className="text-text-muted text-[10px] font-medium tracking-wide mb-2">{label}</p>
-            <p className="text-text-primary text-2xl font-bold">
+      <div className="grid grid-cols-4 gap-3">
+        {KPI_DEFS.map(({ key, label, fmt, accent, color }) => (
+          <div key={key} className={`bg-panel border border-border border-t-2 ${accent} rounded-lg p-4`}>
+            <p className="text-text-muted text-xs uppercase tracking-wider mb-2">{label}</p>
+            <p className={`text-2xl font-bold ${loading || !summary ? 'text-text-muted' : color}`}>
               {loading || !summary ? '—' : fmt(summary[key] as number)}
             </p>
           </div>
         ))}
       </div>
 
-      {/* ROI formula hint */}
-      <p className="text-text-muted text-xs mb-6">
-        ROI = (Revenue − (Maintenance + Fuel)) / Acquisition Cost &nbsp;·&nbsp; Revenue = ₹15 × km per completed trip
+      <p className="text-text-muted text-xs">
+        ROI = (Revenue − Maintenance − Fuel) ÷ Acquisition Cost &nbsp;·&nbsp; Revenue = ₹15 × km per completed trip
       </p>
 
-      {/* Charts row */}
+      {/* Charts */}
       <div className="flex gap-4">
-        {/* Monthly Revenue — 55% */}
-        <div className="flex-[55] bg-panel border border-border rounded-lg p-4">
-          <p className="text-text-primary text-sm font-semibold tracking-wide mb-4">MONTHLY REVENUE</p>
+        {/* Monthly Revenue */}
+        <div className="flex-[55] bg-panel border border-border rounded-lg p-5">
+          <p className="text-text-primary text-sm font-semibold mb-4">Monthly Revenue</p>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={monthly} barCategoryGap="30%">
+            <BarChart data={monthly} barCategoryGap="35%">
+              <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" vertical={false} />
               <XAxis dataKey="month" tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false}
-                tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
-              <Tooltip
-                contentStyle={{ background: '#141414', border: '1px solid #262626', borderRadius: 6 }}
-                labelStyle={{ color: '#F5F5F5', fontSize: 12 }}
-                formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Revenue']}
-              />
-              <Bar dataKey="revenue" fill="#4A7FA5" radius={[3, 3, 0, 0]} />
+              <YAxis tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+              <Tooltip {...tooltipStyle} formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Revenue']} />
+              <Bar dataKey="revenue" fill="#D68910" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Top Costliest Vehicles — 45% */}
-        <div className="flex-[45] bg-panel border border-border rounded-lg p-4">
-          <p className="text-text-primary text-sm font-semibold tracking-wide mb-4">TOP COSTLIEST VEHICLES</p>
+        {/* Top Costliest */}
+        <div className="flex-[45] bg-panel border border-border rounded-lg p-5">
+          <p className="text-text-primary text-sm font-semibold mb-4">Top Costliest Vehicles</p>
           {loading ? (
-            <p className="text-text-muted text-xs">Loading…</p>
+            <div className="h-[220px] flex items-center justify-center"><p className="text-text-muted text-sm">Loading…</p></div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={topCostly} layout="vertical" barCategoryGap="25%">
-                <XAxis type="number" tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false}
-                  tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
-                <YAxis type="category" dataKey="regNumber" tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} width={60} />
-                <Tooltip
-                  contentStyle={{ background: '#141414', border: '1px solid #262626', borderRadius: 6 }}
-                  labelStyle={{ color: '#F5F5F5', fontSize: 12 }}
-                  formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Total Cost']}
-                />
-                <Bar dataKey="totalCost" radius={[0, 3, 3, 0]}>
-                  {topCostly.map((_, i) => (
-                    <Cell key={i} fill={COST_COLORS[i % COST_COLORS.length]} />
-                  ))}
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" horizontal={false} />
+                <XAxis type="number" tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+                <YAxis type="category" dataKey="regNumber" tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} width={55} />
+                <Tooltip {...tooltipStyle} formatter={(v: number) => [`₹${v.toLocaleString()}`, 'Total Cost']} />
+                <Bar dataKey="totalCost" radius={[0, 4, 4, 0]}>
+                  {topCostly.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
