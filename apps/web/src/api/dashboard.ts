@@ -11,6 +11,8 @@ export interface KPIs {
   fleetUtilization: number;
   retired: number;
   total: number;
+  totalOrgs?: number;
+  totalUsers?: number;
 }
 
 export const dashboardApi = {

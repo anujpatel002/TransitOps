@@ -9,13 +9,13 @@ const STATUSES      = ['All', 'AVAILABLE', 'ON_TRIP', 'IN_SHOP', 'RETIRED'];
 const REGIONS       = ['All', 'Mumbai', 'Pune', 'Delhi', 'Nashik', 'Surat'];
 
 const KPI_DEFS = [
-  { key: 'activeVehicles',    label: 'Active Vehicles',        accent: 'border-t-green-500',  value_color: 'text-green-400' },
-  { key: 'availableVehicles', label: 'Available Now',          accent: 'border-t-green-500',  value_color: 'text-green-400' },
-  { key: 'onTrip',            label: 'On Trip',                accent: 'border-t-blue-500',   value_color: 'text-blue-400'  },
-  { key: 'inMaintenance',     label: 'In Maintenance',         accent: 'border-t-amber-500',  value_color: 'text-amber-400' },
-  { key: 'activeTrips',       label: 'Active Trips',           accent: 'border-t-blue-500',   value_color: 'text-blue-400'  },
-  { key: 'driversOnDuty',     label: 'Drivers On Duty',        accent: 'border-t-purple-500', value_color: 'text-purple-400'},
-  { key: 'fleetUtilization',  label: 'Fleet Utilization',      accent: 'border-t-accent',     value_color: 'text-accent',    suffix: '%' as const },
+  { key: 'activeVehicles',    label: 'Active Vehicles',   accent: 'border-t-green-500',  value_color: 'text-green-400'  },
+  { key: 'availableVehicles', label: 'Available Now',     accent: 'border-t-green-500',  value_color: 'text-green-400'  },
+  { key: 'onTrip',            label: 'On Trip',           accent: 'border-t-blue-500',   value_color: 'text-blue-400'   },
+  { key: 'inMaintenance',     label: 'In Maintenance',    accent: 'border-t-amber-500',  value_color: 'text-amber-400'  },
+  { key: 'activeTrips',       label: 'Active Trips',      accent: 'border-t-blue-500',   value_color: 'text-blue-400'   },
+  { key: 'driversOnDuty',     label: 'Drivers On Duty',   accent: 'border-t-purple-500', value_color: 'text-purple-400' },
+  { key: 'fleetUtilization',  label: 'Fleet Utilization', accent: 'border-t-accent',     value_color: 'text-accent',    suffix: '%' as const },
 ] as const;
 
 function StatusBar({ label, count, total, color }: { label: string; count: number; total: number; color: string }) {

@@ -3,9 +3,9 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 const REVENUE_PER_KM = 15;
 
-export async function getFuelEfficiency(orgId: string) {
+export async function getFuelEfficiency(orgId: string | undefined) {
   const vehicles = await prisma.vehicle.findMany({
-    where: { status: { not: 'RETIRED' }, orgId },
+    where: { status: { not: 'RETIRED' }, ...(orgId ? { orgId } : {}) },
     include: {
       trips: { where: { status: 'COMPLETED', fuelConsumed: { gt: 0 } }, select: { plannedDist: true, fuelConsumed: true } },
     },
@@ -18,16 +18,16 @@ export async function getFuelEfficiency(orgId: string) {
   });
 }
 
-export async function getUtilization(orgId: string) {
-  const vehicles = await prisma.vehicle.findMany({ where: { orgId }, select: { status: true } });
+export async function getUtilization(orgId: string | undefined) {
+  const vehicles = await prisma.vehicle.findMany({ where: orgId ? { orgId } : {}, select: { status: true } });
   const active = vehicles.filter(v => v.status !== 'RETIRED').length;
   const onTrip = vehicles.filter(v => v.status === 'ON_TRIP').length;
   return { total: vehicles.length, active, onTrip, utilization: active > 0 ? Math.round((onTrip / active) * 100) : 0 };
 }
 
-export async function getCost(orgId: string) {
+export async function getCost(orgId: string | undefined) {
   const vehicles = await prisma.vehicle.findMany({
-    where: { status: { not: 'RETIRED' }, orgId },
+    where: { status: { not: 'RETIRED' }, ...(orgId ? { orgId } : {}) },
     include: { fuelLogs: { select: { cost: true } }, maintenance: { select: { cost: true } } },
   });
   return vehicles.map(v => {
@@ -37,9 +37,9 @@ export async function getCost(orgId: string) {
   });
 }
 
-export async function getRoi(orgId: string) {
+export async function getRoi(orgId: string | undefined) {
   const vehicles = await prisma.vehicle.findMany({
-    where: { status: { not: 'RETIRED' }, orgId },
+    where: { status: { not: 'RETIRED' }, ...(orgId ? { orgId } : {}) },
     include: {
       fuelLogs:    { select: { cost: true } },
       maintenance: { select: { cost: true } },
@@ -56,7 +56,7 @@ export async function getRoi(orgId: string) {
   });
 }
 
-export async function getSummary(orgId: string) {
+export async function getSummary(orgId: string | undefined) {
   const [efficiency, utilization, cost, roi] = await Promise.all([
     getFuelEfficiency(orgId), getUtilization(orgId), getCost(orgId), getRoi(orgId),
   ]);
@@ -68,9 +68,9 @@ export async function getSummary(orgId: string) {
   return { avgKmL, utilization: utilization.utilization, totalCost, avgRoi, efficiency, cost, roi };
 }
 
-export async function getMonthlyRevenue(orgId: string) {
+export async function getMonthlyRevenue(orgId: string | undefined) {
   const trips = await prisma.trip.findMany({
-    where: { status: 'COMPLETED', vehicle: { orgId } },
+    where: { status: 'COMPLETED', ...(orgId ? { vehicle: { orgId } } : {}) },
     select: { plannedDist: true, createdAt: true },
   });
   const months: Record<string, number> = {};

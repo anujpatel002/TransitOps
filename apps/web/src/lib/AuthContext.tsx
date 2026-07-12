@@ -11,7 +11,7 @@ interface AuthCtx {
 }
 
 const PERMISSIONS: Record<string, string[]> = {
-  ADMIN:             ['dashboard', 'fleet', 'drivers', 'trips', 'maintenance', 'fuel-expenses', 'analytics', 'settings'],
+  ADMIN:             ['admin-dashboard', 'admin-analytics', 'admin-settings'],
   FLEET_MANAGER:     ['dashboard', 'fleet', 'drivers', 'trips', 'maintenance', 'fuel-expenses', 'analytics', 'settings'],
   DISPATCHER:        ['dashboard', 'fleet', 'trips'],
   SAFETY_OFFICER:    ['dashboard', 'drivers', 'trips', 'maintenance'],

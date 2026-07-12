@@ -2,14 +2,17 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 
 const NAV = [
-  { to: '/dashboard',     label: 'Dashboard',      resource: 'dashboard',     icon: '▦' },
-  { to: '/fleet',         label: 'Fleet',           resource: 'fleet',         icon: '🚛' },
-  { to: '/drivers',       label: 'Drivers',         resource: 'drivers',       icon: '👤' },
-  { to: '/trips',         label: 'Trips',           resource: 'trips',         icon: '🗺' },
-  { to: '/maintenance',   label: 'Maintenance',     resource: 'maintenance',   icon: '🔧' },
-  { to: '/fuel-expenses', label: 'Fuel & Expenses', resource: 'fuel-expenses', icon: '⛽' },
-  { to: '/analytics',     label: 'Analytics',       resource: 'analytics',     icon: '📊' },
-  { to: '/settings',      label: 'Settings',        resource: 'settings',      icon: '⚙' },
+  { to: '/dashboard',       label: 'Dashboard',      resource: 'dashboard',       icon: '▦'  },
+  { to: '/admin-dashboard', label: 'Overview',        resource: 'admin-dashboard', icon: '▦'  },
+  { to: '/fleet',           label: 'Fleet',           resource: 'fleet',           icon: '🚛' },
+  { to: '/drivers',         label: 'Drivers',         resource: 'drivers',         icon: '👤' },
+  { to: '/trips',           label: 'Trips',           resource: 'trips',           icon: '🗺' },
+  { to: '/maintenance',     label: 'Maintenance',     resource: 'maintenance',     icon: '🔧' },
+  { to: '/fuel-expenses',   label: 'Fuel & Expenses', resource: 'fuel-expenses',   icon: '⛽' },
+  { to: '/analytics',       label: 'Analytics',       resource: 'analytics',       icon: '📊' },
+  { to: '/admin-analytics', label: 'Analytics',       resource: 'admin-analytics', icon: '📊' },
+  { to: '/settings',        label: 'Settings',        resource: 'settings',        icon: '⚙'  },
+  { to: '/admin-settings',  label: 'Manage',          resource: 'admin-settings',  icon: '⚙'  },
 ];
 
 const ROLE_COLORS: Record<string, string> = {

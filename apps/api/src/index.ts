@@ -13,6 +13,7 @@ import reportsRouter from './routes/reports';
 import dashboardRouter from './routes/dashboard';
 import usersRouter from './routes/users';
 import registrationRequestsRouter from './routes/registrationRequests';
+import organizationsRouter from './routes/organizations';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -33,6 +34,7 @@ app.use('/api/reports', reportsRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/registration-requests', registrationRequestsRouter);
+app.use('/api/organizations', organizationsRouter);
 
 app.use(errorHandler);
 

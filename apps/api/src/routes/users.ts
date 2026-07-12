@@ -10,12 +10,13 @@ const prisma = new PrismaClient();
 
 router.use(verifyToken, requireRole('FLEET_MANAGER', 'ADMIN'));
 
-// List all users in same org
+// List users — ADMIN sees all, FLEET_MANAGER sees own org only
 router.get('/', async (req: any, res, next) => {
   try {
+    const where = req.user.role === 'ADMIN' ? {} : { orgId: req.user.orgId };
     const users = await prisma.user.findMany({
-      where: { orgId: req.user.orgId },
-      select: { id: true, name: true, email: true, role: true, mustChangePassword: true, lockedAt: true },
+      where,
+      select: { id: true, name: true, email: true, role: true, orgId: true, org: { select: { name: true } }, mustChangePassword: true, lockedAt: true },
       orderBy: { email: 'asc' },
     });
     res.json(users);
@@ -30,8 +31,11 @@ router.post('/', async (req: any, res, next) => {
       return void res.status(400).json({ message: 'name, email, role and password are required' });
 
     const hashed = await bcrypt.hash(password, 10);
+    const assignedOrgId = req.user.role === 'ADMIN'
+      ? (req.body.orgId || null)
+      : (req as any).user.orgId ?? null;
     const user = await prisma.user.create({
-      data: { name, email, role, password: hashed, mustChangePassword: true, orgId: (req as any).user.orgId ?? null },
+      data: { name, email, role, password: hashed, mustChangePassword: true, orgId: assignedOrgId },
       select: { id: true, name: true, email: true, role: true, mustChangePassword: true },
     });
     await sendTempPassword(email, name, password).catch(() => {});
@@ -42,11 +46,14 @@ router.post('/', async (req: any, res, next) => {
   }
 });
 
-// Update role or unlock — only within same org
+// Update — ADMIN can update any user, FLEET_MANAGER only own org
 router.patch('/:id', async (req: any, res, next) => {
   try {
     const { role, unlock } = req.body;
-    const target = await prisma.user.findFirst({ where: { id: req.params.id, orgId: req.user.orgId } });
+    const where = req.user.role === 'ADMIN'
+      ? { id: req.params.id }
+      : { id: req.params.id, orgId: req.user.orgId };
+    const target = await prisma.user.findFirst({ where });
     if (!target) return void res.status(404).json({ message: 'User not found' });
     const user = await prisma.user.update({
       where: { id: req.params.id },
@@ -60,10 +67,13 @@ router.patch('/:id', async (req: any, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Delete user — only within same org
+// Delete — ADMIN can delete any user, FLEET_MANAGER only own org
 router.delete('/:id', async (req: any, res, next) => {
   try {
-    const target = await prisma.user.findFirst({ where: { id: req.params.id, orgId: req.user.orgId } });
+    const where = req.user.role === 'ADMIN'
+      ? { id: req.params.id }
+      : { id: req.params.id, orgId: req.user.orgId };
+    const target = await prisma.user.findFirst({ where });
     if (!target) return void res.status(404).json({ message: 'User not found' });
     await prisma.user.delete({ where: { id: req.params.id } });
     res.status(204).send();

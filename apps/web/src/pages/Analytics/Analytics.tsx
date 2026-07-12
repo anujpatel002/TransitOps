@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LineChart, Line, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { reportsApi } from '../../api/reports';
 import ErrorBanner from '../../components/ErrorBanner';
 import { friendlyError } from '../../lib/friendlyError';
@@ -101,6 +101,8 @@ export default function Analytics() {
           )}
         </div>
       </div>
+
+      {/* Admin: Org Breakdown */}
     </div>
   );
 }

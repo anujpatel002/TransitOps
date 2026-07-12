@@ -40,9 +40,8 @@ export default function Settings() {
   const { user: me } = useAuth();
   const qc = useQueryClient();
   const isManager = me?.role === 'FLEET_MANAGER';
-  const isAdmin    = me?.role === 'ADMIN';
 
-  const [tab, setTab] = useState<'general' | 'users' | 'requests' | 'rbac'>('general');
+  const [tab, setTab] = useState<'general' | 'users' | 'rbac'>('general');
   const [form, setForm] = useState({ depot: 'Mumbai Central Depot', currency: 'INR', distUnit: 'km' });
   const [showAdd, setShowAdd] = useState(false);
   const [newUser, setNewUser] = useState(BLANK);
@@ -51,19 +50,7 @@ export default function Settings() {
   const { data: users = [], error: usersError } = useQuery({
     queryKey: ['users'],
     queryFn: () => http.get('/users').then(r => r.data),
-    enabled: (isManager || isAdmin) && tab === 'users',
-  });
-
-  const { data: requests = [], error: requestsError } = useQuery({
-    queryKey: ['registration-requests'],
-    queryFn: () => http.get('/registration-requests').then(r => r.data),
-    enabled: isAdmin && tab === 'requests',
-  });
-
-  const reviewMutation = useMutation({
-    mutationFn: ({ id, action, rejectReason }: { id: string; action: string; rejectReason?: string }) =>
-      http.patch(`/registration-requests/${id}`, { action, rejectReason }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['registration-requests'] }),
+    enabled: isManager && tab === 'users',
   });
 
   const createMutation = useMutation({
@@ -86,10 +73,9 @@ export default function Settings() {
     setForm(f => ({ ...f, [k]: e.target.value }));
 
   const TABS = [
-    { key: 'general',  label: 'General' },
-    ...(isManager || isAdmin ? [{ key: 'users',    label: 'User Management' }] : []),
-    ...(isAdmin               ? [{ key: 'requests', label: 'Registration Requests' }] : []),
-    { key: 'rbac',    label: 'RBAC Reference' },
+    { key: 'general', label: 'General' },
+    ...(isManager ? [{ key: 'users', label: 'User Management' }] : []),
+    { key: 'rbac',   label: 'RBAC Reference' },
   ] as const;
 
   return (
@@ -284,75 +270,6 @@ export default function Settings() {
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Registration Requests */}
-      {tab === 'requests' && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-text-muted text-sm">
-              {requests.filter((r: any) => r.status === 'PENDING').length} pending request{requests.filter((r: any) => r.status === 'PENDING').length !== 1 ? 's' : ''}
-            </p>
-          </div>
-
-          {requestsError && <ErrorBanner message="Failed to load requests" />}
-
-          <div className="bg-panel border border-border rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  {['Name', 'Email', 'Company', 'Submitted', 'Status', ''].map(h => (
-                    <th key={h} className="text-left text-text-muted text-xs px-5 py-3 font-medium">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {requests.length === 0 && (
-                  <tr><td colSpan={5} className="px-5 py-8 text-center text-text-muted text-sm">No registration requests yet</td></tr>
-                )}
-                {requests.map((r: any) => (
-                  <tr key={r.id} className="border-b border-border/50 hover:bg-white/[0.02]">
-                    <td className="px-5 py-3 text-text-primary font-medium">{r.name}</td>
-                    <td className="px-5 py-3 text-text-muted">{r.email}</td>
-                    <td className="px-5 py-3 text-text-muted">{r.orgName || '—'}</td>
-                    <td className="px-5 py-3 text-text-muted text-xs">{new Date(r.createdAt).toLocaleDateString()}</td>
-                    <td className="px-5 py-3">
-                      {r.status === 'PENDING'  && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400 font-medium">Pending</span>}
-                      {r.status === 'APPROVED' && <span className="text-xs px-2 py-0.5 rounded-full bg-green-400/10 text-green-400 font-medium">Approved</span>}
-                      {r.status === 'REJECTED' && <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 font-medium">Rejected</span>}
-                    </td>
-                    <td className="px-5 py-3">
-                      {r.status === 'PENDING' && (
-                        <div className="flex items-center gap-3 justify-end">
-                          <button
-                            onClick={() => reviewMutation.mutate({ id: r.id, action: 'approve' })}
-                            disabled={reviewMutation.isPending}
-                            className="text-xs text-green-400 hover:text-green-300 font-medium transition-colors disabled:opacity-40"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => {
-                              const reason = prompt('Rejection reason (optional):') ?? undefined;
-                              reviewMutation.mutate({ id: r.id, action: 'reject', rejectReason: reason });
-                            }}
-                            disabled={reviewMutation.isPending}
-                            className="text-xs text-rose-400 hover:text-rose-300 font-medium transition-colors disabled:opacity-40"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                      {r.status === 'REJECTED' && r.rejectReason && (
-                        <span className="text-xs text-text-muted italic">{r.rejectReason}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
 

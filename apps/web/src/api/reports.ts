@@ -7,6 +7,7 @@ export const reportsApi = {
   cost:            () => http.get('/reports/cost'),
   roi:             () => http.get('/reports/roi'),
   monthlyRevenue:  () => http.get('/reports/monthly-revenue'),
+  orgBreakdown:    () => http.get<{ name: string; fuelCost: number; maintCost: number; revenue: number; totalCost: number }[]>('/reports/org-breakdown'),
   exportCsv: () => {
     const token = localStorage.getItem('token');
     window.open(`/api/reports/export.csv?token=${token}`, '_blank');

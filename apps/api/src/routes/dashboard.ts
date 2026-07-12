@@ -6,14 +6,14 @@ const router = Router();
 const prisma = new PrismaClient();
 router.use(verifyToken);
 
-const orgId = (req: AuthRequest) => req.user!.orgId!;
+const orgId = (req: AuthRequest) => req.user!.orgId ?? undefined;
 
 router.get('/kpis', async (req: AuthRequest, res, next) => {
   try {
     const { type, status, region } = req.query as Record<string, string>;
     const oid = orgId(req);
 
-    const vehicleWhere: Record<string, unknown> = { orgId: oid };
+    const vehicleWhere: Record<string, unknown> = oid ? { orgId: oid } : {};
     if (type) vehicleWhere.type = type;
     if (status) vehicleWhere.status = status;
 
@@ -21,12 +21,12 @@ router.get('/kpis', async (req: AuthRequest, res, next) => {
       prisma.vehicle.findMany({ where: vehicleWhere, select: { status: true } }),
       prisma.trip.findMany({
         where: {
-          vehicle: { orgId: oid },
+          ...(oid ? { vehicle: { orgId: oid } } : {}),
           ...(region ? { OR: [{ source: { contains: region, mode: 'insensitive' } }, { destination: { contains: region, mode: 'insensitive' } }] } : {}),
         },
         select: { status: true },
       }),
-      prisma.driver.findMany({ where: { orgId: oid }, select: { status: true } }),
+      prisma.driver.findMany({ where: oid ? { orgId: oid } : {}, select: { status: true } }),
     ]);
 
     const activeVehicles    = vehicles.filter(v => v.status !== 'RETIRED').length;
@@ -38,24 +38,32 @@ router.get('/kpis', async (req: AuthRequest, res, next) => {
     const driversOnDuty     = drivers.filter(d => d.status === 'ON_TRIP').length;
     const utilization       = activeVehicles > 0 ? Math.round((onTrip / activeVehicles) * 100) : 0;
 
+    const isAdmin = req.user!.role === 'ADMIN';
+    const [totalOrgs, totalUsers] = isAdmin
+      ? await Promise.all([prisma.organization.count(), prisma.user.count()])
+      : [undefined, undefined];
+
     res.json({
       activeVehicles, availableVehicles, inMaintenance, onTrip,
       activeTrips, pendingTrips, driversOnDuty,
       fleetUtilization: utilization,
       retired: vehicles.filter(v => v.status === 'RETIRED').length,
       total: vehicles.length,
+      ...(isAdmin ? { totalOrgs, totalUsers } : {}),
     });
   } catch (err) { next(err); }
 });
 
 router.get('/recent-trips', async (req: AuthRequest, res, next) => {
   try {
+    const oid = orgId(req);
+    const isAdmin = req.user!.role === 'ADMIN';
     res.json(await prisma.trip.findMany({
-      where: { vehicle: { orgId: orgId(req) } },
+      where: oid ? { vehicle: { orgId: oid } } : {},
       take: 10,
       orderBy: { createdAt: 'desc' },
       include: {
-        vehicle: { select: { regNumber: true, name: true } },
+        vehicle: { select: { regNumber: true, name: true, ...(isAdmin ? { org: { select: { name: true } } } : {}) } },
         driver:  { select: { name: true } },
       },
     }));
