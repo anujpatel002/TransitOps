@@ -6,13 +6,14 @@ export interface AuthRequest extends Request {
 }
 
 export function verifyToken(req: AuthRequest, res: Response, next: NextFunction) {
-  const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) {
-    res.status(401).json({ message: 'Unauthorized' });
-    return;
-  }
+  // Allow token via query param for file downloads (e.g. CSV export)
+  const raw = req.headers.authorization?.startsWith('Bearer ')
+    ? req.headers.authorization.slice(7)
+    : (req.query.token as string | undefined);
+
+  if (!raw) { res.status(401).json({ message: 'Unauthorized' }); return; }
   try {
-    const payload = jwt.verify(header.slice(7), process.env.JWT_SECRET!) as { id: string; role: string };
+    const payload = jwt.verify(raw, process.env.JWT_SECRET!) as { id: string; role: string };
     req.user = payload;
     next();
   } catch {
